@@ -46,17 +46,13 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public User update(User user) {
         User oldUser = users.get(user.getId());
-        System.out.println(oldUser);
         if (!oldUser.getEmail().equals(user.getEmail()) && emails.contains(user.getEmail())) {
             throw new AlreadyExistException("Такой EMail уже используется");
         }
-        System.out.println(emails);
         emails.remove(oldUser.getEmail());
         users.put(user.getId(), user);
         emails.add(user.getEmail());
         log.info("Обновлена информация о пользователе с id = {}", user.getId());
-        System.out.println(user);
-        System.out.println(emails);
         return user;
     }
 
