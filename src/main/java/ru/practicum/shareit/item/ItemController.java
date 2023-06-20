@@ -5,8 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.utils.Create;
+import ru.practicum.shareit.utils.Update;
 
-import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import java.util.List;
 
@@ -21,14 +22,14 @@ public class ItemController {
 
     @PostMapping
     public ItemDto createItem(@RequestHeader(HEADER_WITH_USER_ID_NAME) @Positive long userId,
-                              @Valid @RequestBody ItemDto itemDto) {
+                              @Validated({Create.class}) @RequestBody ItemDto itemDto) {
         log.info("Попытка создать вещь пользователем с id = {}", userId);
         return itemService.createItem(userId, itemDto);
     }
 
     @PatchMapping("/{itemId}")
     public ItemDto updateItem(@RequestHeader(HEADER_WITH_USER_ID_NAME) @Positive long userId,
-                              @RequestBody ItemDto itemDto, @PathVariable long itemId) {
+                              @Validated({Update.class}) @RequestBody ItemDto itemDto, @PathVariable long itemId) {
         log.info("Попытка обновить вещь с id = {} пользователем с id = {}", itemId, userId);
         itemDto.setId(itemId);
 

@@ -2,10 +2,10 @@ package ru.practicum.shareit.item.model;
 
 import lombok.*;
 import org.apache.coyote.Request;
+import ru.practicum.shareit.user.User;
 
 @Getter
 @Setter
-@EqualsAndHashCode
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
@@ -13,11 +13,11 @@ public class Item {
     private long id;
     private String name;
     private String description;
-    private Boolean available;
-    private long owner;
+    private boolean available;
+    private User owner;
     private Request request;
 
-    public Item(long id, String name, String description, Boolean available, long owner) {
+    public Item(long id, String name, String description, Boolean available, User owner) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -25,3 +25,4 @@ public class Item {
         this.owner = owner;
     }
 }
+
