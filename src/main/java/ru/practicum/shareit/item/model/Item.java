@@ -20,7 +20,7 @@ public class Item {
     private String description;
     private boolean available;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id")
+    @JoinColumn(name = "user_id")
     @ToString.Exclude
     private User user;
 
