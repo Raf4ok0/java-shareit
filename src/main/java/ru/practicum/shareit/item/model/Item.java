@@ -23,13 +23,5 @@ public class Item {
     @JoinColumn(name = "user_id")
     @ToString.Exclude
     private User user;
-
-    public Item(long id, String name, String description, Boolean available, User owner) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.available = available;
-        this.user = owner;
-    }
 }
 

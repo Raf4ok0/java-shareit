@@ -2,6 +2,7 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,8 +26,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import static org.springframework.data.domain.Sort.Direction.ASC;
+import static org.springframework.data.domain.Sort.Direction.DESC;
 import static ru.practicum.shareit.utils.Constants.*;
 
 @Service
@@ -122,22 +127,43 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<ItemWithBookingDto> getUsersItems(long userId) {
         List<Item> items = itemStorage.findByUser_IdOrderByIdAsc(userId);
+        List<Long> ids = items.stream().map(Item::getId).collect(Collectors.toList());
+
+        LocalDateTime now = LocalDateTime.now();
+
+        Map<Long, List<Comment>> comments = commentStorage.findByItem_IdInOrderByIdAsc(ids)
+                .stream()
+                .collect(Collectors.groupingBy(c -> c.getItem().getId(), Collectors.toList()));
+
+        Map<Long, List<Booking>> lastBookings = bookingStorage
+                .findByItemIdInAndStartBeforeAndStatus(ids, now, Status.APPROVED, Sort.by(DESC, "start"))
+                .stream()
+                .collect(Collectors.groupingBy(c -> c.getItem().getId(), Collectors.toList()));
+
+        Map<Long, List<Booking>> nextBookings = bookingStorage
+                .findByItemIdInAndStartAfterAndStatus(ids, now, Status.APPROVED, Sort.by(ASC, "start"))
+                .stream()
+                .collect(Collectors.groupingBy(c -> c.getItem().getId(), Collectors.toList()));
+
+
         List<ItemWithBookingDto> mappedItems = new ArrayList<>();
 
         for (Item item : items) {
-            List<Booking> sortedBookings = bookingStorage.findByItem_IdAndItem_User_IdAndStatusOrderByStartAsc(
-                    item.getId(), userId, Status.APPROVED);
+            Booking lastBooking = getFirstBooking(lastBookings.get(item.getId()));
+            Booking nextBooking = getFirstBooking(nextBookings.get(item.getId()));
 
-            Booking[] bookings = findLastAndNextBookings(sortedBookings);
-
-            List<Comment> comments = commentStorage.findByItem_IdOrderByIdAsc(item.getId());
-            log.info("Получен список отзывов на вещь с id = {} длиной {}", item.getId(), comments.size());
-
-            mappedItems.add(ItemMapper.toItemWithBookingDto(item, bookings[0], bookings[1], comments));
+            mappedItems.add(ItemMapper.toItemWithBookingDto(item,
+                    lastBooking,
+                    nextBooking,
+                    comments.getOrDefault(item.getId(), List.of())));
         }
 
         log.info("Получен список вещей пользователя с id = {} длиной {}", userId, items.size());
         return mappedItems;
+    }
+
+    private Booking getFirstBooking(List<Booking> list) {
+        return (list == null || list.isEmpty()) ? null : list.get(0);
     }
 
     @Override

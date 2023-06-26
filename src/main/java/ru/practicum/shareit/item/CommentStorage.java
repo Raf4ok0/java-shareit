@@ -10,4 +10,6 @@ public interface CommentStorage extends JpaRepository<Comment, Long> {
 
     List<Comment> findByItem_IdOrderByIdAsc(Long id);
 
+    List<Comment> findByItem_IdInOrderByIdAsc(List<Long> ids);
+
 }

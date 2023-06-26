@@ -2,7 +2,6 @@ package ru.practicum.shareit.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -11,13 +10,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.exception.AlreadyExistException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.model.UserMapper;
 
-import javax.validation.ValidationException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -57,17 +54,9 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public UserDto createUser(UserDto user) {
-        user.setId(0);
-        validateUser(user);
-
-        try {
-            User savedUser = userStorage.save(UserMapper.toUser(user));
-            log.info("Создан пользователь с id = {}", savedUser.getId());
-            return UserMapper.toUserDto(savedUser);
-        } catch (DataIntegrityViolationException e) {
-            log.warn("Выполнена попытка создать пользователя с почтой, которая уже есть в базе: {}", user.getEmail());
-            throw new AlreadyExistException(String.format(USER_ALREADY_EXISTS_MESSAGE, user.getEmail()));
-        }
+        User savedUser = userStorage.save(UserMapper.toUser(user));
+        log.info("Создан пользователь с id = {}", savedUser.getId());
+        return UserMapper.toUserDto(savedUser);
     }
 
     @Override
@@ -87,27 +76,19 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public UserDto updateUser(UserDto user) {
-        Optional<User> currentUser = userStorage.findById(user.getId());
+        User currentUser = userStorage.findById(user.getId()).orElseThrow(
+                () -> new NotFoundException(String.format(USER_NOT_FOUND_MESSAGE, user.getId()))
+        );
 
-        if (currentUser.isEmpty()) {
-            log.warn("Выполнена попытка обновить пользователя по несуществующему id = {}", user.getId());
-            throw new NotFoundException(String.format(USER_NOT_FOUND_MESSAGE, user.getId()));
+        if (user.getEmail() != null) {
+            currentUser.setEmail(user.getEmail());
         }
 
-        if (user.getEmail() != null && !user.getEmail().isBlank()) {
-            if (userStorage.existsByEmailAndIdNot(user.getEmail(), user.getId())) {
-                log.warn("Выполнена попытка установить пользователю почту, которая уже есть в базе: {}", user.getEmail());
-                throw new AlreadyExistException(String.format(USER_ALREADY_EXISTS_MESSAGE, user.getEmail()));
-            }
-
-            currentUser.get().setEmail(user.getEmail());
+        if (user.getName() != null) {
+            currentUser.setName(user.getName());
         }
 
-        if (user.getName() != null && !user.getName().isBlank()) {
-            currentUser.get().setName(user.getName());
-        }
-
-        User updatedUser = userStorage.save(currentUser.get());
+        User updatedUser = userStorage.save(currentUser);
         log.info("Обновлена информация о пользователе с id = {}", updatedUser.getId());
         return UserMapper.toUserDto(updatedUser);
     }
@@ -123,16 +104,5 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private void validateUser(UserDto user) {
-        if (user.getName() == null || user.getName().isBlank()) {
-            log.warn("Выполнена попытка создать пользователя с некорректным именем: {}", user.getName());
-            throw new ValidationException(NOT_EMPTY_USER_NAME_MESSAGE);
-        }
-
-        if (user.getEmail() == null || user.getEmail().isEmpty()) {
-            log.warn("Выполнена попытка создать пользователя с некорректной почтой: {}", user.getEmail());
-            throw new ValidationException(NOT_EMPTY_EMAIL_MESSAGE);
-        }
-    }
 }
 

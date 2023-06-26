@@ -55,7 +55,9 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException(String.format(Constants.ITEM_NOT_FOUND_MESSAGE, bookingDto.getItemId()));
         }
 
-        if (Boolean.FALSE.equals(item.get().isAvailable())) {
+        log.info("Бронирование: {}", item);
+
+        if (!item.get().isAvailable()) {
             log.warn("Выполнена попытка пользователем с id = {} забронировать вещь с id = {}, которая" +
                     " недоступна к бронированию", userId, bookingDto.getItemId());
             throw new NotAvailableException(String.format(Constants.ITEM_NOT_AVAILABLE_MESSAGE,
@@ -145,7 +147,7 @@ public class BookingServiceImpl implements BookingService {
                 bookings = bookingStorage.findByBooker_IdAndStatusOrderByStartDesc(userId, Status.REJECTED);
                 break;
             default:
-                throw new IllegalArgumentException(String.format(Constants.UNKNOWN_SEARCHING_STATE_MESSAGE, state));
+                bookings = List.of();
         }
 
         log.info("Получен список бронирований автора с id = {} со статусом {} длиной {}", userId, state,
@@ -181,7 +183,7 @@ public class BookingServiceImpl implements BookingService {
                         LocalDateTime.now(), LocalDateTime.now());
                 break;
             default:
-                throw new IllegalArgumentException(String.format(Constants.UNKNOWN_SEARCHING_STATE_MESSAGE, state));
+                bookings = List.of();
         }
 
         log.info("Получен список бронирований владельца вещей с id = {} со статусом {} длиной {}", userId, state,
