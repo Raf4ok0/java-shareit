@@ -4,10 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemWithBookingDto;
 import ru.practicum.shareit.utils.Create;
 import ru.practicum.shareit.utils.Update;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import java.util.List;
 
@@ -37,13 +40,14 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getItem(@PathVariable @Positive long itemId) {
+    public ItemWithBookingDto getItem(@RequestHeader(HEADER_WITH_USER_ID_NAME) long userId,
+                                      @PathVariable @Positive long itemId) {
         log.info("Попытка получить вешь с id = {}", itemId);
-        return itemService.getItem(itemId);
+        return itemService.getItem(itemId, userId);
     }
 
     @GetMapping
-    public List<ItemDto> getUsersItems(@RequestHeader(HEADER_WITH_USER_ID_NAME) @Positive long userId) {
+    public List<ItemWithBookingDto> getUsersItems(@RequestHeader(HEADER_WITH_USER_ID_NAME) @Positive long userId) {
         log.info("Попытка получить все вещи пользователя с id = {}", userId);
         return itemService.getUsersItems(userId);
     }
@@ -54,4 +58,12 @@ public class ItemController {
 
         return itemService.searchItems(text);
     }
+
+    @PostMapping("/{itemId}/comment")
+    public CommentDto createComment(@RequestHeader(HEADER_WITH_USER_ID_NAME) @Positive long userId,
+                                    @PathVariable @Positive long itemId, @Valid @RequestBody CommentDto commentDto) {
+        log.info("Попытка оставить отзыв на вещь с id = {} пользователем с id = {}", itemId, userId);
+        return itemService.createComment(commentDto, userId, itemId);
+    }
+
 }

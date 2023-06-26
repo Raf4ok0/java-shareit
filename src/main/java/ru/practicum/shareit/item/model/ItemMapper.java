@@ -1,8 +1,14 @@
 package ru.practicum.shareit.item.model;
 
 import lombok.experimental.UtilityClass;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.BookingMapper;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.item.dto.ItemWithBookingDto;
+import ru.practicum.shareit.user.model.User;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @UtilityClass
 public class ItemMapper {
@@ -24,4 +30,24 @@ public class ItemMapper {
                 item.isAvailable()
         );
     }
+
+    public static ItemWithBookingDto toItemWithBookingDto(Item item, Booking lastBooking, Booking nextBooking,
+                                                          List<Comment> comments) {
+        return new ItemWithBookingDto(
+                item.getId(),
+                item.getName(),
+                item.getDescription(),
+                item.isAvailable(),
+                BookingMapper.toSimpleBookingDto(lastBooking),
+                BookingMapper.toSimpleBookingDto(nextBooking),
+                CommentMapper.toCommentDto(comments)
+        );
+    }
+
+    public static List<ItemDto> toItemDto(List<Item> items) {
+        return items.stream()
+                .map(ItemMapper::toItemDto)
+                .collect(Collectors.toList());
+    }
+
 }
