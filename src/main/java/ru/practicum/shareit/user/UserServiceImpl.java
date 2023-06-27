@@ -76,6 +76,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public UserDto updateUser(UserDto user) {
+        log.info("updateUser: {}", user);
         User currentUser = userStorage.findById(user.getId()).orElseThrow(
                 () -> new NotFoundException(String.format(USER_NOT_FOUND_MESSAGE, user.getId()))
         );
