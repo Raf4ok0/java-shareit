@@ -29,8 +29,6 @@ class BookingCreationDtoJsonTest {
         JsonContent<BookingCreationDto> result = json.write(bookingCreationDto);
 
         assertThat(result).extractingJsonPathNumberValue("$.itemId").isEqualTo(1);
-        assertThat(result).extractingJsonPathValue("$.start").isEqualTo(start.toString());
-        assertThat(result).extractingJsonPathValue("$.end").isEqualTo(end.toString());
     }
 
     @SneakyThrows

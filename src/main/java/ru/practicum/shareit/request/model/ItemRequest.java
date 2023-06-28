@@ -10,8 +10,6 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Getter
-@Setter
-@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -41,8 +39,4 @@ public class ItemRequest {
         return getId() != null && Objects.equals(getId(), that.getId());
     }
 
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
 }
