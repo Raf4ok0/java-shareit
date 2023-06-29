@@ -33,4 +33,8 @@ public class User {
         return getId() != null && Objects.equals(getId(), user.getId());
     }
 
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

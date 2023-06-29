@@ -39,4 +39,8 @@ public class ItemRequest {
         return getId() != null && Objects.equals(getId(), that.getId());
     }
 
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
