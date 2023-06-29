@@ -2,6 +2,10 @@ package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -120,75 +124,87 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getBookingsByBookerId(long userId, String state) {
-        List<Booking> bookings;
+    public List<BookingDto> getBookingsByBookerId(long userId, String state, int from, int size) {
+        Sort sortByStartDate = Sort.by(Sort.Direction.DESC, "start");
+        Pageable page = PageRequest.of(from / size, size, sortByStartDate);
+        Page<Booking> bookings = null;
         SearchingState searchingState = getSearchingState(state);
 
         checkUserExistence(userId);
 
         switch (searchingState) {
             case ALL:
-                bookings = bookingStorage.findByBooker_IdOrderByStartDesc(userId);
+                bookings = bookingStorage.findByBooker_Id(userId, page);
                 break;
             case PAST:
-                bookings = bookingStorage.findByBooker_IdAndEndBeforeOrderByStartDesc(userId, LocalDateTime.now());
+                bookings = bookingStorage.findByBooker_IdAndEndBefore(userId, LocalDateTime.now(), page);
                 break;
             case FUTURE:
-                bookings = bookingStorage.findByBooker_IdAndStartAfterOrderByStartDesc(userId, LocalDateTime.now());
+                bookings = bookingStorage.findByBooker_IdAndStartAfter(userId, LocalDateTime.now(), page);
                 break;
             case CURRENT:
-                bookings = bookingStorage.findByBooker_IdAndStartBeforeAndEndAfterOrderByStartDesc(userId,
-                        LocalDateTime.now(), LocalDateTime.now());
+                bookings = bookingStorage.findByBooker_IdAndStartBeforeAndEndAfter(userId,
+                        LocalDateTime.now(), LocalDateTime.now(), page);
                 break;
             case WAITING:
-                bookings = bookingStorage.findByBooker_IdAndStatusOrderByStartDesc(userId, Status.WAITING);
+                bookings = bookingStorage.findByBooker_IdAndStatus(userId, Status.WAITING, page);
                 break;
             case REJECTED:
-                bookings = bookingStorage.findByBooker_IdAndStatusOrderByStartDesc(userId, Status.REJECTED);
+                bookings = bookingStorage.findByBooker_IdAndStatus(userId, Status.REJECTED, page);
                 break;
             default:
-                bookings = List.of();
+                bookings = null;
         }
 
+        List<BookingDto> res = (bookings != null)
+                ? BookingMapper.toBookingDto(bookings.getContent())
+                : List.of();
+
         log.info("Получен список бронирований автора с id = {} со статусом {} длиной {}", userId, state,
-                bookings.size());
-        return BookingMapper.toBookingDto(bookings);
+                res.size());
+        return res;
     }
 
     @Override
-    public List<BookingDto> getBookingsByOwnerId(long userId, String state) {
-        List<Booking> bookings;
+    public List<BookingDto> getBookingsByOwnerId(long userId, String state, int from, int size) {
+        Sort sortByStartDate = Sort.by(Sort.Direction.DESC, "start");
+        Pageable page = PageRequest.of(from / size, size, sortByStartDate);
+        Page<Booking> bookings;
         SearchingState searchingState = getSearchingState(state);
 
         checkUserExistence(userId);
 
         switch (searchingState) {
             case ALL:
-                bookings = bookingStorage.findByItem_User_IdOrderByStartDesc(userId);
+                bookings = bookingStorage.findByItem_User_Id(userId, page);
                 break;
             case REJECTED:
-                bookings = bookingStorage.findByItem_User_IdAndStatusOrderByStartDesc(userId, Status.REJECTED);
+                bookings = bookingStorage.findByItem_User_IdAndStatus(userId, Status.REJECTED, page);
                 break;
             case WAITING:
-                bookings = bookingStorage.findByItem_User_IdAndStatusOrderByStartDesc(userId, Status.WAITING);
+                bookings = bookingStorage.findByItem_User_IdAndStatus(userId, Status.WAITING, page);
                 break;
             case FUTURE:
-                bookings = bookingStorage.findByItem_User_IdAndStartAfterOrderByStartDesc(userId, LocalDateTime.now());
+                bookings = bookingStorage.findByItem_User_IdAndStartAfter(userId, LocalDateTime.now(), page);
                 break;
             case PAST:
-                bookings = bookingStorage.findByItem_User_IdAndEndBeforeOrderByStartDesc(userId, LocalDateTime.now());
+                bookings = bookingStorage.findByItem_User_IdAndEndBefore(userId, LocalDateTime.now(), page);
                 break;
             case CURRENT:
-                bookings = bookingStorage.findByItem_User_IdAndStartBeforeAndEndAfterOrderByStartDesc(userId,
-                        LocalDateTime.now(), LocalDateTime.now());
+                bookings = bookingStorage.findByItem_User_IdAndStartBeforeAndEndAfter(userId,
+                        LocalDateTime.now(), LocalDateTime.now(), page);
                 break;
             default:
-                bookings = List.of();
+                bookings = null;
         }
 
+        List<BookingDto> res = (bookings != null)
+                ? BookingMapper.toBookingDto(bookings.getContent())
+                : List.of();
+
         log.info("Получен список бронирований владельца вещей с id = {} со статусом {} длиной {}", userId, state,
-                bookings.size());
-        return BookingMapper.toBookingDto(bookings);
+                res.size());
+        return res;
     }
 
     private Booking getBookingById(long bookingId) {
