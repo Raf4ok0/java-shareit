@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingCreationDto;
-import ru.practicum.shareit.utils.Validator;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -28,7 +27,6 @@ public class BookingController {
     public ResponseEntity<Object> createBooking(@Valid @RequestBody BookingCreationDto bookingDto,
                                                 @RequestHeader(HEADER_WITH_USER_ID_NAME) @Positive long userId) {
         log.info("Попытка забронировать вещь с id = {} пользователем с id = {}", bookingDto.getItemId(), userId);
-        Validator.checkTimeCorrectness(bookingDto.getStart(), bookingDto.getEnd());
         return bookingClient.createBooking(bookingDto, userId);
     }
 
@@ -53,7 +51,7 @@ public class BookingController {
                                                         @RequestParam(defaultValue = DEFAULT_PAGE_SIZE) @Positive int size) {
         log.info("Попытка получить {} бронирований начиная с {} со статусом {} автора бронирований с id = {}", size,
                 from, state, userId);
-        return bookingClient.getBookingsByBookerId(userId, Validator.getSearchingState(state), from, size);
+        return bookingClient.getBookingsByBookerId(userId, state, from, size);
     }
 
     @GetMapping("/owner")
@@ -63,6 +61,6 @@ public class BookingController {
                                                        @RequestParam(defaultValue = DEFAULT_PAGE_SIZE) @Positive int size) {
         log.info("Попытка получить {} бронирований начиная с {} со статусом {} владельца вещей с id = {}", size, from,
                 state, userId);
-        return bookingClient.getBookingsByOwnerId(userId, Validator.getSearchingState(state), from, size);
+        return bookingClient.getBookingsByOwnerId(userId, state, from, size);
     }
 }

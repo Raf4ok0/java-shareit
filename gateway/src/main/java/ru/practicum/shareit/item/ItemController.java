@@ -7,6 +7,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.utils.Create;
+import ru.practicum.shareit.utils.Update;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -17,7 +19,6 @@ import static ru.practicum.shareit.utils.Constants.*;
 
 @RestController
 @RequestMapping("/items")
-@Validated
 @Slf4j
 @RequiredArgsConstructor
 public class ItemController {
@@ -25,14 +26,15 @@ public class ItemController {
 
     @PostMapping
     public ResponseEntity<Object> createItem(@RequestHeader(HEADER_WITH_USER_ID_NAME) @Positive long userId,
-                                             @Valid @RequestBody ItemDto itemDto) {
+                                             @Validated({Create.class})  @RequestBody ItemDto itemDto) {
         log.info("Попытка создать вещь пользователем с id = {}", userId);
         return itemClient.createItem(userId, itemDto);
     }
 
     @PatchMapping("/{itemId}")
     public ResponseEntity<Object> updateItem(@RequestHeader(HEADER_WITH_USER_ID_NAME) @Positive long userId,
-                                             @RequestBody ItemDto itemDto, @PathVariable @Positive long itemId) {
+                                             @Validated({Update.class}) @RequestBody ItemDto itemDto,
+                                             @PathVariable @Positive long itemId) {
         log.info("Попытка обновить вещь с id = {} пользователем с id = {}", itemId, userId);
         return itemClient.updateItem(userId, itemDto, itemId);
     }

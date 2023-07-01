@@ -6,9 +6,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.utils.Validator;
+import ru.practicum.shareit.utils.Create;
+import ru.practicum.shareit.utils.Update;
 
-import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 
 @RestController
@@ -20,9 +20,8 @@ public class UserController {
     private final UserClient userClient;
 
     @PostMapping
-    public ResponseEntity<Object> createUser(@Valid @RequestBody UserDto user) {
+    public ResponseEntity<Object> createUser(@Validated({Create.class}) @RequestBody UserDto user) {
         log.info("Попытка создать пользователя");
-        Validator.validateUser(user);
         return userClient.createUser(user);
     }
 
@@ -45,7 +44,7 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}")
-    public ResponseEntity<Object> updateUser(@PathVariable @Positive long userId, @Valid @RequestBody UserDto user) {
+    public ResponseEntity<Object> updateUser(@PathVariable @Positive long userId, @Validated({Update.class}) @RequestBody UserDto user) {
         log.info("Попытка обновить пользователя с id = {}", userId);
         return userClient.updateUser(user, userId);
     }

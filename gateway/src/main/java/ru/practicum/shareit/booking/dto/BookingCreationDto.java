@@ -3,6 +3,7 @@ package ru.practicum.shareit.booking.dto;
 import lombok.*;
 
 import javax.validation.constraints.Future;
+import javax.validation.constraints.FutureOrPresent;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
@@ -15,7 +16,8 @@ public class BookingCreationDto {
     @NotNull
     private Long itemId;
     @NotNull
-    @Future
+    @FutureOrPresent
+    @StartBeforeEndValid
     private LocalDateTime start;
     @NotNull
     @Future
